@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Xpressaly</title>
+    <link rel="stylesheet" href="/css/login.css">
+    <link rel="stylesheet" href="/css/register.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Login as background -->
+    <div class="login-background">
+        <iframe src="/login" title="Login Background" scrolling="no"></iframe>
+    </div>
+    
+    <!-- Clickable overlay to return to login -->
+    <div class="overlay" onclick="window.location.href='/login'"></div>
+    
+    <div class="register-container">
+        <div class="register-form">
+            <div class="form-header">
+                <h2>Create Account</h2>
+                <p>Join Xpressaly to start shopping</p>
+            </div>
+            
+            {{#error}}
+            <div class="alert" role="alert">
+                <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
+                {{error}}
+            </div>
+            {{/error}}
+            
+            <form action="/register" method="post" id="registerForm">
+                <input type="hidden" name="_csrf" value="{{token}}"/>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <i class="fas fa-user icon"></i>
+                        <input type="text" id="firstName" name="firstName" 
+                               pattern="[A-Za-zÀ-ÿ\s]+" 
+                               title="Please enter only letters"
+                               placeholder="Enter your first name"
+                               required>
+                        <small>Only letters are allowed.</small>
+                        <div class="invalid-feedback">Please enter your first name using only letters (A-Z).</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <i class="fas fa-user icon"></i>
+                        <input type="text" id="lastName" name="lastName" 
+                               pattern="[A-Za-zÀ-ÿ\s]+" 
+                               title="Please enter only letters"
+                               placeholder="Enter your last name"
+                               required>
+                        <small>Only letters are allowed.</small>
+                        <div class="invalid-feedback">Please enter your last name using only letters (A-Z).</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <i class="fas fa-envelope icon"></i>
+                    <input type="email" id="email" name="email" 
+                           placeholder="Enter your email address"
+                           required>
+                    <small>Enter a valid email address. Each email can only be used once.</small>
+                    <div class="invalid-feedback">Please enter a valid email format (example@domain.com).</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <i class="fas fa-lock icon"></i>
+                    <input type="password" id="password" name="password" 
+                           pattern="^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$"
+                           placeholder="Create a strong password"
+                           required>
+                    <small>Password must be at least 8 characters long and contain uppercase, lowercase, and numbers.</small>
+                    <div class="invalid-feedback">Your password must have at least 8 characters with uppercase, lowercase, and numbers.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <i class="fas fa-home icon"></i>
+                    <input type="text" id="address" name="address" 
+                           placeholder="Enter your address"
+                           required>
+                    <small>Enter your full residential address.</small>
+                    <div class="invalid-feedback">Please enter your complete address.</div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number</label>
+                        <i class="fas fa-phone icon"></i>
+                        <input type="tel" id="phoneNumber" name="phoneNumber" 
+                               pattern="[0-9]{6,9}" 
+                               title="Please enter between 6 and 9 digits"
+                               placeholder="Enter your phone number"
+                               maxlength="9"
+                               required>
+                        <small>Enter a number between 6 and 9 digits.</small>
+                        <div class="invalid-feedback">Please enter a valid phone number with 6-9 digits.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="age">Age</label>
+                        <i class="fas fa-birthday-cake icon"></i>
+                        <input type="number" id="age" name="age" 
+                               min="18"
+                               placeholder="Enter your age"
+                               required>
+                        <small>You must be between 18 and 120 years old.</small>
+                        <div class="invalid-feedback">Age must be between 18 and 120 years.</div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-submit">Create Account</button>
+            </form>
+            
+            <div class="form-footer">
+                <p>Already have an account? <a href="/login">Sign in</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/register.js"></script>
+</body>
+</html>

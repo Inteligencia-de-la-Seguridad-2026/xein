@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{token}}">
+    <title>Products</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/product-cards.css">
+    <link rel="stylesheet" href="/css/wellcome.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/price-filter.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="/js/price-slider.js"></script>
+    <style>
+        /* Custom animations for dynamic search */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        /* Search input enhancements */
+        .search-input-container {
+            position: relative;
+        }
+        
+        .search-input-container:focus-within {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(41, 65, 86, 0.15);
+        }
+        
+        /* Pulse animation for search icon */
+        .search-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+        
+        /* Filter badge for active filters */
+        .filter-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 12px;
+            height: 12px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+    </style>
+</head>
+
+<body class="bg-[#F5EFEB] font-['Inter']">
+    {{> common/header}}
+
+    <main class="p-6 max-w-[1600px] mx-auto">
+        {{#errorMessage}}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert">
+            <span class="block font-light">{{errorMessage}}</span>
+        </div>
+        {{/errorMessage}}
+
+        <div class="flex justify-between items-center mb-4 border-b border-[#294156]/10 pb-3">
+            <h2 class="text-2xl font-light tracking-wide text-[#294156] relative inline-block after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-1/3 after:h-0.5 after:bg-[#294156]/30">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                Available Products
+            </h2>
+        </div>
+        
+        <!-- Enhanced Search Box -->
+        <div class="mb-4">
+            <div class="flex gap-2 search-input-container transition-all duration-300">
+                <div class="relative flex-1">
+                    <input type="text" id="productSearch" placeholder="Start typing to search products..." 
+                           class="w-full p-3 pl-4 pr-10 border border-[#294156]/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#294156]/50 transition-all duration-300" />
+                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#294156]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <button id="searchButton" class="button px-6 py-3 rounded-lg text-base flex items-center justify-center transition-all duration-300 hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="vertical-align: middle;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span style="vertical-align: middle;">Search</span>
+                </button>
+            </div>
+            <!-- Results counter will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Main Content with Sidebar Layout -->
+        <div class="flex flex-row gap-6">
+            <!-- Left Sidebar with Filters -->
+            <div class="w-1/5">
+                <div class="sidebar-container">
+                    <!-- Sort options -->
+                    <div class="mb-4 bg-white p-3 rounded-lg shadow-sm border border-[#294156]/10 filter-container transition-all duration-300 hover:shadow-md">
+                        <h3 class="text-[#294156] text-sm font-medium mb-2 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                            </svg>
+                            Sort Products
+                        </h3>
+                        <select id="priceSort" class="w-full p-2 border border-[#294156]/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#294156]/50 bg-white transition-all duration-300">
+                            <option value="default">Default</option>
+                            <option value="price_asc">Price: Low to High</option>
+                            <option value="price_desc">Price: High to Low</option>
+                        </select>
+                    </div>
+
+                    <!-- Price Range Filter -->
+                    <div class="mb-4 bg-white p-3 rounded-lg shadow-sm border border-[#294156]/10 filter-container transition-all duration-300 hover:shadow-md relative">
+                        <h3 class="text-[#294156] text-sm font-medium mb-2 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            </svg>
+                            Filter by Price
+                        </h3>
+                        
+                        <!-- Price Range Inputs -->
+                        <div class="flex flex-col gap-3 mb-4">
+                            <div>
+                                <label for="price-min" class="block text-xs text-[#294156]/70 mb-1">Min Price ($)</label>
+                                <input type="number" id="price-min" min="0" max="1000" value="0" 
+                                       class="w-full p-1.5 text-sm border border-[#294156]/20 rounded focus:outline-none focus:ring-1 focus:ring-[#294156] transition-all duration-300" />
+                            </div>
+                            <div>
+                                <label for="price-max" class="block text-xs text-[#294156]/70 mb-1">Max Price ($)</label>
+                                <input type="number" id="price-max" min="0" max="1000" value="1000" 
+                                       class="w-full p-1.5 text-sm border border-[#294156]/20 rounded focus:outline-none focus:ring-1 focus:ring-[#294156] transition-all duration-300" />
+                            </div>
+                        </div>
+                        
+                        <!-- Apply Filter Button -->
+                        <div class="flex flex-col gap-2">
+                            <button id="apply-price-filter" class="bg-[#294156] text-white px-3 py-1.5 text-sm rounded hover:bg-[#567C8D] transition-all duration-300 transform hover:scale-105">
+                                Apply Filter
+                            </button>
+                            <button id="reset-price-filter" class="px-3 py-1.5 text-sm rounded border border-[#294156] text-[#294156] hover:bg-[#294156]/10 transition-all duration-300">
+                                Reset
+                            </button>
+                        </div>
+                        
+                        <!-- Filter indicator -->
+                        <div id="price-filter-indicator" class="filter-badge hidden"></div>
+                    </div>
+                    
+                    <!-- Rating Filter -->
+                    <div class="mb-4 bg-white p-3 rounded-lg shadow-sm border border-[#294156]/10 filter-container transition-all duration-300 hover:shadow-md relative">
+                        <h3 class="text-[#294156] text-sm font-medium mb-2 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                            Filter by Rating
+                        </h3>
+                        
+                        <!-- Rating Filter Input -->
+                        <div class="flex flex-col gap-3 mb-4">
+                            <div>
+                                <label for="min-rating" class="block text-xs text-[#294156]/70 mb-1">Minimum Rating (1-5)</label>
+                                <select id="min-rating" class="w-full p-1.5 text-sm border border-[#294156]/20 rounded focus:outline-none focus:ring-1 focus:ring-[#294156] transition-all duration-300">
+                                    <option value="0">Any Rating</option>
+                                    <option value="1">★ and above</option>
+                                    <option value="2">★★ and above</option>
+                                    <option value="3">★★★ and above</option>
+                                    <option value="4">★★★★ and above</option>
+                                    <option value="5">★★★★★ only</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Apply Filter Button -->
+                        <div class="flex flex-col gap-2">
+                            <button id="apply-rating-filter" class="bg-[#294156] text-white px-3 py-1.5 text-sm rounded hover:bg-[#567C8D] transition-all duration-300 transform hover:scale-105">
+                                Apply Filter
+                            </button>
+                            <button id="reset-rating-filter" class="px-3 py-1.5 text-sm rounded border border-[#294156] text-[#294156] hover:bg-[#294156]/10 transition-all duration-300">
+                                Reset
+                            </button>
+                        </div>
+                        
+                        <!-- Filter indicator -->
+                        <div id="rating-filter-indicator" class="filter-badge hidden"></div>
+                    </div>
+                    
+                    <!-- Quick Action Buttons -->
+                    <div class="mb-4 bg-white p-3 rounded-lg shadow-sm border border-[#294156]/10 filter-container transition-all duration-300 hover:shadow-md">
+                        <h3 class="text-[#294156] text-sm font-medium mb-2 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Quick Actions
+                        </h3>
+                        <button onclick="clearAllFiltersAndSearch()" class="w-full px-3 py-2 text-sm rounded border border-[#294156]/30 text-[#294156] hover:bg-[#294156] hover:text-white transition-all duration-300">
+                            Clear All Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Main Content Area -->
+            <div class="w-4/5">
+                <!-- Products Grid -->
+                <div class="products-grid" id="productsGrid">
+                    <!-- Products will be loaded dynamically using JavaScript -->
+                </div>
+
+                <div class="text-center mt-6 mb-4">
+                    <button id="loadMoreBtn" class="button px-4 py-2 text-sm rounded-lg bg-[#294156] text-white hover:bg-[#567C8D] transition-all duration-300 flex items-center justify-center mx-auto shadow-md hover:shadow-lg transform hover:-translate-y-1" onclick="loadMoreProducts()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="vertical-align: middle;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                        <span class="leading-none" style="vertical-align: middle;">Load More</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    {{> common/footer}}
+
+    <script src="/js/wellcome.js"></script>
+</body>
+</html>

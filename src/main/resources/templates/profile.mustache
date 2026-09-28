@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="_csrf" content="{{token}}">
+    <meta name="_csrf_header" content="X-CSRF-TOKEN">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="/css/header.css" />
+    <link rel="stylesheet" href="/css/profile-modern.css" />
+    <link rel="stylesheet" href="/css/rich-text.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* Styles for the password change modal */
+        #passwordModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            z-index: 1000;
+            width: 450px;
+            max-width: 90%;
+        }
+
+        #modalOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+        }
+
+        #passwordModal.active,
+        #modalOverlay.active {
+            display: block;
+        }
+
+        .password-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .password-container input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .password-toggle-btn {
+            background-color: #294156;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .password-requirements {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .requirement i {
+            margin-right: 8px;
+            width: 16px;
+            text-align: center;
+        }
+
+        .requirement.valid {
+            color: #28a745;
+        }
+
+        .requirement.invalid {
+            color: #dc3545;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .save-password-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .save-password-btn:hover {
+            background-color: #218838;
+        }
+
+        .close-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .close-btn:hover {
+            background-color: #c82333;
+        }
+
+        .modal-title {
+            color: #294156;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 500;
+        }
+
+        /* NEW STYLES FOR PDF SECTION AND BUTTONS */
+        .pdf-section {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Softer shadow */
+            margin-top: 40px;
+            margin-bottom: 40px; /* Separation from next section */
+            text-align: center;
+        }
+
+        .pdf-section h2 {
+            color: #294156;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        .pdf-section .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .pdf-section label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .pdf-section input[type="file"] {
+            padding: 10px;
+            border: 1px solid #e0e0e0; /* Lighter border */
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            color: #294156;
+            font-size: 1em; /* Ensure consistent font size */
+        }
+
+        .pdf-section .upload-pdf-btn,
+        .pdf-section .view-pdf-btn {
+            background-color: #294156; /* Consistent with primary theme color */
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.05em; /* Slightly smaller for minimalist */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .pdf-section .upload-pdf-btn:hover,
+        .pdf-section .view-pdf-btn:hover {
+            background-color: #567C8D; /* Hover color consistent with theme */
+            transform: translateY(-2px); /* Subtle lift effect */
+        }
+
+        .pdf-section .view-pdf-btn {
+            margin-top: 20px;
+            background-color: #567C8D; /* Different shade for view */
+        }
+
+        .pdf-section .view-pdf-btn:hover {
+            background-color: #294156;
+        }
+
+        .pdf-section .delete-pdf-btn {
+            background-color: #dc3545; /* Red for delete */
+            margin-left: 15px; /* Space between buttons */
+        }
+
+        .pdf-section .delete-pdf-btn:hover {
+            background-color: #c82333;
+        }
+
+        .pdf-section .view-pdf-btn .sign,
+        .pdf-section .view-pdf-btn .text {
+            display: contents;
+        }
+
+        /* NEW STYLES FOR DELETE ORDER BUTTON */
+        .delete-order-btn {
+            background: linear-gradient(90deg, #dc3545 60%, #ff6f61 100%);
+            color: #fff;
+            padding: 12px 26px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.08em;
+            font-weight: 600;
+            box-shadow: 0 2px 12px rgba(220,53,69,0.10);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: background 0.3s, box-shadow 0.2s, transform 0.15s;
+            outline: none;
+            position: relative;
+        }
+        .delete-order-btn i {
+            font-size: 1.2em;
+        }
+        .delete-order-btn:hover {
+            background: linear-gradient(90deg, #ff6f61 60%, #dc3545 100%);
+            box-shadow: 0 6px 18px rgba(220,53,69,0.18);
+            transform: translateY(-2px) scale(1.04);
+            animation: shake 0.18s 1;
+        }
+        .delete-order-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 1px 4px rgba(220,53,69,0.10);
+        }
+        @keyframes shake {
+            0% { transform: translateY(-2px) scale(1.04) translateX(0); }
+            25% { transform: translateY(-2px) scale(1.04) translateX(-2px); }
+            50% { transform: translateY(-2px) scale(1.04) translateX(2px); }
+            75% { transform: translateY(-2px) scale(1.04) translateX(-2px); }
+            100% { transform: translateY(-2px) scale(1.04) translateX(0); }
+        }
+
+        /* Custom file input styles */
+        .custom-file-input {
+            display: none;
+        }
+        .custom-file-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #f5f6fa;
+            color: #294156;
+            border: 1.5px solid #CBD3E6;
+            border-radius: 8px;
+            padding: 10px 22px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border 0.2s;
+            font-weight: 500;
+        }
+        .custom-file-label:hover {
+            background-color: #e6ecf3;
+            color: #567C8D;
+            border-color: #567C8D;
+        }
+        .file-name {
+            margin-left: 10px;
+            color: #567C8D;
+            font-size: 0.98em;
+            font-style: italic;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        .pdf-section .upload-pdf-btn {
+            margin-top: 18px;
+            background: linear-gradient(90deg, #294156 60%, #567C8D 100%);
+            box-shadow: 0 2px 8px rgba(44, 62, 80, 0.07);
+            border: none;
+            font-weight: 600;
+        }
+        .pdf-section .upload-pdf-btn:active {
+            transform: scale(0.97);
+        }
+    </style>
+</head>
+
+<body>
+
+{{> common/header}}
+<div id="notification-container" class="notification-container"></div>
+<main>
+    <div class="profile-section">
+        <div class="profile-picture">👤</div>
+        <p id="userName">{{name}} {{surname}}</p>
+    </div>
+
+    <div class="personal-data">
+        <h2>Personal Data</h2>
+        <form action="/logout" method="post">
+            <input type="submit" value="Log Out" class="logout-btn">            
+            <input type="hidden" name="_csrf" value="{{token}}"/>        
+        </form>
+        <form action="/update-profile" method="post">
+            <input type="hidden" name="_csrf" value="{{token}}"/>
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Name:</label>
+                <input type="text" name="firstName" value="{{name}}" class="w-full p-2 border rounded mb-4 text-[#294156]" />
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Surname:</label>
+                <input type="text" name="lastName" value="{{surname}}" class="w-full p-2 border rounded mb-4 text-[#294156]" />
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email:</label>
+                <input type="email" name="email" value="{{email}}" class="w-full p-2 border rounded mb-4 text-[#294156]" />
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-map-marker-alt"></i> Address:</label>
+                <input type="text" name="address" value="{{address}}" class="w-full p-2 border rounded mb-4 text-[#294156]" />
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-phone"></i> Phone Number:</label>
+                <input type="text" name="phone" value="{{phone}}" class="w-full p-2 border rounded mb-4 text-[#294156]" />
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-birthday-cake"></i> Age:</label>
+                <input type="number" name="age" value="{{age}}" class="w-full p-2 border rounded mb-4 text-[#294156]" />
+            </div>
+
+            <!-- We remove the current password -->
+
+            <button type="button" id="openPasswordModalBtn" class="change-password-btn">
+                <i class="fas fa-key"></i> Change Password
+            </button>
+
+            <button type="submit" class="update-profile-btn">
+                <i class="fas fa-save"></i> Update Profile
+            </button>
+        </form>
+    </div>
+
+    <div class="pdf-section">
+        <h2>Currículum Vitae (CV)</h2>
+        <form action="/upload-pdf" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf" value="{{token}}"/>
+            <div class="form-group">
+                <label for="pdfFile">Upload your CV in PDF format so employers can view it.</label>
+                <input type="file" id="pdfFile" name="pdfFile" accept=".pdf" required>
+            </div>
+            <button type="submit" class="upload-pdf-btn">
+                <i class="fas fa-upload"></i> Upload PDF
+            </button>
+        </form>
+
+        {{#pdfPath}}
+        <div class="pdf-actions">
+            <a href="/view-pdf" target="_blank" class="view-pdf-btn">
+                <i class="fas fa-eye"></i> View PDF
+            </a>
+            <form action="/delete-pdf" method="post" style="display: inline;">
+                <input type="hidden" name="_csrf" value="{{token}}"/>
+                <button type="submit" class="upload-pdf-btn delete-pdf-btn">
+                    <i class="fas fa-trash-alt"></i> Delete PDF
+                </button>
+            </form>
+        </div>
+        {{/pdfPath}}
+    </div>
+
+    <!-- Change password modal -->
+    <div id="modalOverlay"></div>
+    <div id="passwordModal">
+        <h3 class="modal-title">Change Password</h3>
+        <form id="passwordChangeForm" onsubmit="return savePasswordAndClose()">
+            <input type="hidden" name="_csrf" value="{{token}}"/>
+            <div class="form-group">
+                <label for="newPassword">New Password:</label>
+                <div class="password-container">
+                    <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password" required />
+                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('newPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password:</label>
+                <div class="password-container">
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password" required />
+                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('confirmPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="password-requirements">
+                <div class="requirement" id="length-req">
+                    <i class="fas fa-circle"></i>
+                    <span>At least 8 characters</span>
+                </div>
+                <div class="requirement" id="uppercase-req">
+                    <i class="fas fa-circle"></i>
+                    <span>At least one uppercase letter</span>
+                </div>
+                <div class="requirement" id="lowercase-req">
+                    <i class="fas fa-circle"></i>
+                    <span>At least one lowercase letter</span>
+                </div>
+                <div class="requirement" id="number-req">
+                    <i class="fas fa-circle"></i>
+                    <span>At least one number</span>
+                </div>
+                <div class="requirement" id="match-req">
+                    <i class="fas fa-circle"></i>
+                    <span>Passwords match</span>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="modal-btn close-btn" onclick="closePasswordModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" class="modal-btn save-password-btn" id="savePasswordBtn" disabled>
+                    <i class="fas fa-save"></i> Save
+                </button>
+            </div>
+        </form>
+    </div>
+
+
+    <!-- Options menu -->
+    <div class="options-menu">
+        <a class="option-card">
+            <h3><i class="fas fa-shopping-bag"></i> My Orders</h3>
+            {{#orders}}
+                <div class="order-card" data-order-id="{{id}}">
+                    <h3>Order #{{id}}</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> Delivery Address: {{address}}</p>
+                    {{#products}}
+                        <p>-{{name}} x {{amount}}: ${{price}}</p>
+                    {{/products}}
+                    <p class="total"><strong>Total: ${{total}}</strong></p>
+                    <button class="delete-order-button" onclick="deleteOrder('{{id}}')"><i class="fas fa-trash-alt"></i> Delete Order</button>
+                </div>
+            {{/orders}}
+            {{^orders}}
+                <p class="no-orders"><i class="fas fa-info-circle"></i> No orders yet.</p>
+            {{/orders}}
+        </a>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="reviews-section">
+        <h2><i class="fas fa-star"></i> My Reviews</h2>
+        {{#reviews}}
+            <a href="/product-details?id={{productId}}" class="review-card" style="text-decoration: none; color: inherit; display: block;">
+            <input type="number" name="productId" value="{{productId}}" hidden />
+            <h3>{{productName}}</h3>
+            <div class="rating">
+                <span class="star">★</span>
+                <span class="rating-value">{{rating}}/5</span>
+            </div>
+            <div class="rich-text-content review-content-{{productId}}">
+                {{{comment}}}
+            </div>
+            <span class="review-date"><i class="far fa-calendar-alt"></i> {{date}}</span>
+            </a>
+        {{/reviews}}
+        {{^reviews}}
+            <p class="no-reviews"><i class="fas fa-info-circle"></i> No reviews yet.</p>
+        {{/reviews}}
+    </div>
+</main>
+
+<div class="delete-account-section" style="text-align: center; margin: 20px 0;">
+    <form action="/delete-account" method="post">
+        <input type="hidden" name="_csrf" value="{{token}}"/>
+        <button type="submit" class="delete-account-btn"
+                style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+            <i class="fas fa-trash-alt"></i> Delete Account</button>
+    </form>
+</div>
+
+{{> common/footer}}
+
+<script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.8/dist/purify.min.js"></script>
+<script src="/js/profile.js"></script>
+
+<script>
+    document.getElementById('openPasswordModalBtn').addEventListener('click', function () {
+        document.getElementById('passwordModal').classList.add('active');
+        document.getElementById('modalOverlay').classList.add('active');
+    });
+
+    document.getElementById('modalOverlay').addEventListener('click', closePasswordModal);
+
+    function closePasswordModal() {
+        document.getElementById('passwordModal').classList.remove('active');
+        document.getElementById('modalOverlay').classList.remove('active');
+        // Reset form
+        document.getElementById('passwordChangeForm').reset();
+        resetPasswordValidation();
+    }
+
+    function togglePasswordVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        const button = input.nextElementSibling;
+        const icon = button.querySelector('i');
+
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = "password";
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    function validatePassword() {
+        const password = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const saveButton = document.getElementById('savePasswordBtn');
+        
+        // Validar longitud
+        const lengthValid = password.length >= 8;
+        updateRequirement('length-req', lengthValid);
+        
+        // Validar mayúscula
+        const hasUpperCase = /[A-Z]/.test(password);
+        updateRequirement('uppercase-req', hasUpperCase);
+        
+        // Validar minúscula
+        const hasLowerCase = /[a-z]/.test(password);
+        updateRequirement('lowercase-req', hasLowerCase);
+        
+        // Validar número
+        const hasNumber = /\d/.test(password);
+        updateRequirement('number-req', hasNumber);
+        
+        // Validar coincidencia
+        const passwordsMatch = password === confirmPassword && password !== '';
+        updateRequirement('match-req', passwordsMatch);
+        
+        // Habilitar/deshabilitar botón de guardar
+        const allValid = lengthValid && hasUpperCase && hasLowerCase && hasNumber && passwordsMatch;
+        saveButton.disabled = !allValid;
+    }
+
+    function updateRequirement(id, isValid) {
+        const requirement = document.getElementById(id);
+        const icon = requirement.querySelector('i');
+        
+        if (isValid) {
+            requirement.classList.remove('invalid');
+            requirement.classList.add('valid');
+            icon.classList.remove('fa-circle');
+            icon.classList.add('fa-check-circle');
+        } else {
+            requirement.classList.remove('valid');
+            requirement.classList.add('invalid');
+            icon.classList.remove('fa-check-circle');
+            icon.classList.add('fa-circle');
+        }
+    }
+
+    function resetPasswordValidation() {
+        const requirements = document.querySelectorAll('.requirement');
+        requirements.forEach(req => {
+            req.classList.remove('valid', 'invalid');
+            const icon = req.querySelector('i');
+            icon.classList.remove('fa-check-circle');
+            icon.classList.add('fa-circle');
+        });
+        document.getElementById('savePasswordBtn').disabled = true;
+    }
+
+    // Añadir event listeners para validación en tiempo real
+    document.getElementById('newPassword').addEventListener('input', validatePassword);
+    document.getElementById('confirmPassword').addEventListener('input', validatePassword);
+
+    function savePasswordAndClose() {
+        const password = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (password !== confirmPassword) {
+            showNotification('Las contraseñas no coinciden.', 'error');
+            return false;
+        }
+
+        // Crear un campo oculto en el formulario principal para la nueva contraseña
+        let hiddenPassword = document.getElementById('hiddenPassword');
+        if (!hiddenPassword) {
+            hiddenPassword = document.createElement('input');
+            hiddenPassword.type = 'hidden';
+            hiddenPassword.id = 'hiddenPassword';
+            hiddenPassword.name = 'password';
+            document.querySelector('form[action="/update-profile"]').appendChild(hiddenPassword);
+        }
+        hiddenPassword.value = password;
+
+        // Agregar el campo de confirmación
+        let hiddenConfirmPassword = document.getElementById('hiddenConfirmPassword');
+        if (!hiddenConfirmPassword) {
+            hiddenConfirmPassword = document.createElement('input');
+            hiddenConfirmPassword.type = 'hidden';
+            hiddenConfirmPassword.id = 'hiddenConfirmPassword';
+            hiddenConfirmPassword.name = 'confirmPassword';
+            document.querySelector('form[action="/update-profile"]').appendChild(hiddenConfirmPassword);
+        }
+        hiddenConfirmPassword.value = confirmPassword;
+
+        closePasswordModal();
+        
+        // Enviar el formulario para actualizar la contraseña
+        document.querySelector('form[action="/update-profile"]').submit();
+        
+        return false;
+    }
+
+    function updateFileName() {
+        const input = document.getElementById('pdfFile');
+        const fileNameSpan = document.getElementById('selectedFileName');
+        if (input.files && input.files.length > 0) {
+            fileNameSpan.textContent = input.files[0].name;
+        } else {
+            fileNameSpan.textContent = 'No file selected';
+        }
+    }
+</script>
+</body>
+
+</html>

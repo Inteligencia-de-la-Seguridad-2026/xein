@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" content="{{token}}">
+    <meta name="_csrf_header" content="X-CSRF-TOKEN">
+    <title>Product Management</title>
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/profile-modern.css">
+    <link rel="stylesheet" href="/css/product-management.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="minimal-body">
+    {{> common/header}}
+    
+    <main class="main-container">
+        <!-- Header Section -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="title-section">
+                    <div class="title-icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <div class="title-text">
+                        <h1 class="page-title">Product Management</h1>
+                        <p class="page-subtitle">Manage your product catalog with ease</p>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <a href="/create-product" class="primary-btn">
+                        <i class="fas fa-plus"></i>
+                        <span>Add Product</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        {{#error}}
+        <div class="alert alert-error">
+            <div class="alert-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-content">
+                <p>{{error}}</p>
+            </div>
+        </div>
+        {{/error}}
+
+        <!-- Products Section -->
+        <div class="products-section">
+            <div class="section-header">
+                <h2 class="section-title">Products</h2>
+                <div class="section-meta" id="productCount">
+                    <!-- Product count will be updated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-container">
+                <div class="products-grid" id="productsGrid">
+                    {{#products}}
+                    <div class="product-card">
+                        <div class="product-image-wrapper">
+                            <img src="/image/{{id}}" alt="{{name}}" class="product-image" loading="lazy">
+                            <div class="product-overlay">
+                                <div class="product-actions">
+                                    <button class="action-btn edit-btn" onclick="window.location.href='/edit-product/{{id}}'" title="Edit Product">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="action-btn delete-btn" 
+                                            data-id="{{id}}" 
+                                            data-name="{{name}}" 
+                                            title="Delete Product"
+                                            onclick="showDeleteConfirmation({{id}}, '{{name}}')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="product-info">
+                            <h3 class="product-name">{{name}}</h3>
+                            <div class="product-meta">
+                                <span class="product-id">ID: {{id}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {{/products}}
+                </div>
+
+                <!-- Empty State -->
+                {{^products}}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <h3 class="empty-title">No products yet</h3>
+                    <p class="empty-description">Start building your catalog by adding your first product</p>
+                    <a href="/create-product" class="primary-btn">
+                        <i class="fas fa-plus"></i>
+                        <span>Add First Product</span>
+                    </a>
+                </div>
+                {{/products}}
+
+                <!-- Load More Button -->
+                <div class="load-more-container">
+                    <button id="loadMoreBtn" class="load-more-btn">
+                        <i class="fas fa-chevron-down"></i>
+                        <span>Load More</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-backdrop" id="confirmDeleteModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="modal-title">Delete Product</h3>
+                <p class="modal-subtitle">This action cannot be undone</p>
+            </div>
+            
+            <div class="modal-body">
+                <div class="product-preview">
+                    <div class="preview-icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <div class="preview-content">
+                        <span class="preview-label">Product to delete:</span>
+                        <span class="preview-name" id="productName"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="secondary-btn" id="cancelDelete">
+                    <span>Cancel</span>
+                </button>
+                <form action="/delete-product" method="post" id="deleteProductForm" style="display: inline;">
+                    <input type="hidden" name="productId" id="productIdInput">
+                    <input type="hidden" name="_csrf" value="{{token}}"/>
+                    <button type="submit" class="danger-btn">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Delete Product</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    {{> common/footer}}  
+    <script src="/js/product-management.js"></script>
+</body>
+
+</html> 
