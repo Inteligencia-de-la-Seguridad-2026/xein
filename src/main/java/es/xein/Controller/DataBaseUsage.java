@@ -20,9 +20,6 @@ import es.xein.Repository.ReviewRepository;
 import es.xein.Repository.UserRepository;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
 
@@ -43,6 +40,10 @@ public class DataBaseUsage implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        if (userRepository.count() > 0 || productRepository.count() > 0) {
+            return;
+        }
+
         // Save some customers
         User user;
         user=new User("Juan", "Pérez", "juan.perez@email.com", passwordEncoder.encode("Password123"), "Calle Ficticia 123", 213412398, 25);
@@ -612,7 +613,10 @@ public class DataBaseUsage implements CommandLineRunner {
         try {
             Resource resource = new ClassPathResource("static/Images/" + imageName);
             if (resource.exists()) {
-                byte[] imageBytes = Files.readAllBytes(Paths.get(resource.getURI()));
+                byte[] imageBytes;
+                try (var inputStream = resource.getInputStream()) {
+                    imageBytes = inputStream.readAllBytes();
+                }
                 product.setImageData(imageBytes);
             } else {
                 System.out.println("Image not found: " + imageName);
