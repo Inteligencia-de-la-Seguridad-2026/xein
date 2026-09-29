@@ -25,13 +25,17 @@ header.scrolled {
     transform: translateY(-100%);
 }
 
-header img {
-    width: 200px;
-    height: auto;
+header .site-brand {
+    color: var(--white);
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    text-decoration: none;
     transition: transform 0.3s ease;
 }
 
-header img:hover {
+header .site-brand:hover {
     transform: scale(1.05);
 }
 

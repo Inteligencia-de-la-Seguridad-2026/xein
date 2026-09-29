@@ -1,13 +1,12 @@
-package es.web.xpressaly;
+package es.xein;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class XpressalyApplicationTests {
+class XeinApplicationTests {
 
     @Test
     void contextLoads() {
     }
-
 }

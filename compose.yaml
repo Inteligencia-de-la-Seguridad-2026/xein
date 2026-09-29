@@ -1,0 +1,73 @@
+name: xein-lab
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  database:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${XEIN_DB_ROOT_PASSWORD:-xein-lab-root-password}
+      TZ: UTC
+    logging: *default-logging
+    volumes:
+      - database_data:/var/lib/mysql
+      - ./database/xein-seed.sql:/docker-entrypoint-initdb.d/01-xein-seed.sql:ro
+      - ./database/permissions.sql:/docker-entrypoint-initdb.d/02-permissions.sql:ro
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --protocol=tcp --host=localhost --port=3306 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  web:
+    build: .
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/xein?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: xein
+      SPRING_DATASOURCE_PASSWORD: xein-lab-password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      TZ: UTC
+    logging: *default-logging
+    ports:
+      - "${XEIN_BIND_ADDRESS:-127.0.0.1}:8080:8080"
+      - "${XEIN_BIND_ADDRESS:-127.0.0.1}:8443:8443"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - dmz
+      - backend
+
+  payment:
+    build: ./payment
+    environment:
+      PAYMENT_DB_PATH: /data/transactions.sqlite
+      PORT: "9090"
+      TZ: UTC
+    logging: *default-logging
+    volumes:
+      - payment_data:/data
+    expose:
+      - "9090"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9090/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+networks:
+  dmz:
+  backend:
+    internal: true
+
+volumes:
+  database_data:
+  payment_data:
