@@ -25,6 +25,9 @@ import es.xein.Model.User;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @Controller
 @Transactional
@@ -163,6 +166,7 @@ public class OrderController {
         model.addAttribute("products", currentOrder.getProducts());
         model.addAttribute("quantities", currentOrder.getQuantities());
         model.addAttribute("total", currentOrder.getTotal());
+        model.addAttribute("user", currentUser);
         return "my_Order";
     }
 
