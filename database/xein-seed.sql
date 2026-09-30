@@ -222,6 +222,7 @@ CREATE TABLE `users` (
   `password` varchar(255) DEFAULT NULL,
   `pdf_path` varchar(255) DEFAULT NULL,
   `phone_number` int NOT NULL,
+  `twitter` varchar(255) DEFAULT NULL,
   `role` enum('ADMIN','USER') DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UK8kvt8y8cs0svdi9ucg7ils2ps` (`first_name`)
@@ -234,7 +235,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Calle Ficticia 123',25,'juan.perez@email.com','Juan','Pérez','$2a$10$jEvvF4ocLlubE4h1aPqqc.gtT.r7UuZen4y4ZJJMdM5qCR3uOR.QW',NULL,213412398,'ADMIN'),(2,'Avenida Principal 456',30,'maria.garcia@email.com','Maria','García','$2a$10$HBfXcF4OGpOgP/bA93QXiev37yRETkCALa8Tz0bkPXSC1BOEVF.ZK',NULL,567814785,'USER'),(3,'Calle Real 666',20,'lucas.lopez@email.com','Lucas','López','$2a$10$OE4VZ/MvYkEPw66XzAb0X.Np3ZbjDCTOxK1Zv3XWJaqH9dHzAZpK.',NULL,678542132,'USER');
+INSERT INTO `users` VALUES (1,'Calle Ficticia 123',25,'juan.perez@email.com','Juan','Pérez','$2a$10$jEvvF4ocLlubE4h1aPqqc.gtT.r7UuZen4y4ZJJMdM5qCR3uOR.QW',NULL,213412398,'@xein_sospechoso','ADMIN'),(2,'Avenida Principal 456',30,'maria.garcia@email.com','Maria','García','$2a$10$HBfXcF4OGpOgP/bA93QXiev37yRETkCALa8Tz0bkPXSC1BOEVF.ZK',NULL,567814785,NULL,'USER'),(3,'Calle Real 666',20,'lucas.lopez@email.com','Lucas','López','$2a$10$OE4VZ/MvYkEPw66XzAb0X.Np3ZbjDCTOxK1Zv3XWJaqH9dHzAZpK.',NULL,678542132,NULL,'USER');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
