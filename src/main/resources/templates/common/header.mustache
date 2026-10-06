@@ -1,0 +1,511 @@
+<link rel="stylesheet" href="/css/profile-modern.css">
+<link rel="stylesheet" href="/css/dark-mode.css">
+<header class="bg-gradient-to-r from-[#294156] to-[#2c4961] p-4 text-white flex justify-between items-center shadow-md transition-all duration-300">
+        <a href="/products" class="site-brand" aria-label="Xein home">
+            <span>Xein</span>
+        </a>
+        <nav class="flex items-center gap-4">
+            <a href="/products" class="relative px-2 py-1 transition-all duration-300 hover:text-[#8FB3C9] after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-0.5 after:bg-[#8FB3C9] after:transition-all after:duration-300 hover:after:w-full">Home</a>
+            <a href="/view-order" class="relative px-2 py-1 transition-all duration-300 hover:text-[#8FB3C9] cart-link">
+                Cart
+                {{#cartItemCount}}
+                <span class="cart-counter">{{cartItemCount}}</span>
+                {{/cartItemCount}}
+            </a>
+            <a href="/profile" class="relative px-2 py-1 transition-all duration-300 hover:text-[#8FB3C9] after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-0.5 after:bg-[#8FB3C9] after:transition-all after:duration-300 hover:after:w-full">Profile</a>
+            
+            {{#isAdmin}}
+            <!-- Admin Panel Button - Now opens modern panel -->
+            <div class="admin-menu-container">
+                <button id="adminMenuBtn" class="admin-menu-btn">
+                    Admin Panel
+                </button>
+            </div>
+            {{/isAdmin}}
+            
+            <!-- Dark Mode Toggle -->
+            <label class="switch ml-4" title="Toggle Dark Mode">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+            </label>
+        </nav>
+</header>
+
+<!-- Modern Admin Panel - Visible on All Pages -->
+{{#isAdmin}}
+<div id="modernAdminPanel" class="modern-admin-panel">
+    <div class="admin-panel-header">
+        <div class="admin-title">
+            <i class="fas fa-tools"></i>
+            <span>Admin Panel</span>
+        </div>
+        <button id="toggleAdminPanel" class="toggle-btn" title="Toggle Admin Panel">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <button id="closeAdminPanel" class="close-btn" title="Close Panel">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="admin-panel-content">
+        <div class="admin-section">
+            <h4><i class="fas fa-cube"></i> Products</h4>
+            <div class="admin-buttons">
+                <a href="/create-product" class="admin-link create">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Product</span>
+                </a>
+                <a href="/product-management" class="admin-link manage">
+                    <i class="fas fa-boxes"></i>
+                    <span>Manage Products</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="admin-section">
+            <h4><i class="fas fa-users"></i> Users & Reviews</h4>
+            <div class="admin-buttons">
+                <a href="/users-management" class="admin-link users">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Manage Users</span>
+                </a>
+                <a href="/review-management" class="admin-link reviews">
+                    <i class="fas fa-star"></i>
+                    <span>Manage Reviews</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{{/isAdmin}}
+
+<style>
+    /* Admin Menu Styles - Simplified for button only */
+    .admin-menu-container {
+        position: relative;
+        display: inline-flex;
+        z-index: 1000;
+    }
+    
+    .admin-menu-btn {
+        background-color: #4A7A91;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+        position: relative;
+        z-index: 1001;
+    }
+    
+    .admin-menu-btn:hover {
+        background-color: #5C8EA6;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .admin-menu-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    /* Modern Admin Panel Styles */
+    .modern-admin-panel {
+        position: fixed;
+        top: 80px;
+        right: -320px; /* Hidden by default */
+        width: 320px;
+        height: calc(100vh - 100px);
+        background: linear-gradient(135deg, #294156 0%, #2c4961 50%, #4A7A91 100%);
+        z-index: 999999;
+        border-radius: 15px 0 0 15px;
+        box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+    }
+    
+    .modern-admin-panel.expanded {
+        right: 0;
+    }
+    
+    .modern-admin-panel.collapsed {
+        right: -270px;
+        cursor: pointer;
+    }
+    
+    .modern-admin-panel.collapsed:hover {
+        right: -265px;
+        box-shadow: -15px 0 35px rgba(0,0,0,0.4);
+    }
+    
+    .modern-admin-panel.collapsed::before {
+        content: '⚙️';
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 20px;
+        animation: pulse 2s infinite;
+        z-index: 1000000;
+    }
+    
+    .admin-panel-header {
+        background: rgba(255,255,255,0.1);
+        padding: 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        backdrop-filter: blur(5px);
+    }
+    
+    .admin-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        font-weight: 600;
+        font-size: 18px;
+    }
+    
+    .admin-title i {
+        font-size: 20px;
+        color: #8FB3C9;
+    }
+    
+    .toggle-btn, .close-btn {
+        background: rgba(255,255,255,0.1);
+        border: none;
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        margin-left: 5px;
+    }
+    
+    .toggle-btn:hover, .close-btn:hover {
+        background: rgba(255,255,255,0.2);
+        transform: scale(1.1);
+    }
+    
+    .admin-panel-content {
+        padding: 20px;
+        height: calc(100% - 80px);
+        overflow-y: auto;
+    }
+    
+    .admin-section {
+        margin-bottom: 30px;
+    }
+    
+    .admin-section h4 {
+        color: white;
+        font-size: 16px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .admin-section h4 i {
+        color: #8FB3C9;
+    }
+    
+    .admin-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .admin-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px;
+        background: rgba(255,255,255,0.1);
+        color: white;
+        text-decoration: none;
+        border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255,255,255,0.1);
+        font-weight: 500;
+    }
+    
+    .admin-link:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        border-color: rgba(255,255,255,0.3);
+    }
+    
+    .admin-link i {
+        font-size: 18px;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .admin-link.create i { color: #4ade80; }
+    .admin-link.manage i { color: #60a5fa; }
+    .admin-link.users i { color: #f59e0b; }
+    .admin-link.reviews i { color: #fbbf24; }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .modern-admin-panel {
+            width: 280px;
+            right: -250px;
+        }
+        
+        .modern-admin-panel.collapsed {
+            right: -230px;
+        }
+    }
+    
+    /* Cart Counter Styles */
+    .cart-link {
+        position: relative;
+    }
+    
+    .cart-counter {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        height: 20px;
+        width: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+        transform: scale(1);
+        transition: transform 0.2s ease;
+    }
+    
+    .cart-link:hover .cart-counter {
+        transform: scale(1.1);
+    }
+    
+    /* Dark Mode Styles for Modern Panel */
+    .dark-mode .modern-admin-panel {
+        background: linear-gradient(135deg, #1a2332 0%, #1e2a3a 50%, #2d3748 100%);
+    }
+    
+    .dark-mode .admin-link {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.05);
+    }
+    
+    .dark-mode .admin-link:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.2);
+    }
+</style>
+
+<script>
+    // Dark mode functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        
+        // Check for saved user preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.checked = true;
+        }
+        
+        // Listen for toggle changes
+        darkModeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        });
+        
+        // Admin menu functionality with enhanced vanilla JS
+        const adminMenuBtn = document.getElementById('adminMenuBtn');
+        const modernAdminPanel = document.getElementById('modernAdminPanel');
+        const toggleAdminPanel = document.getElementById('toggleAdminPanel');
+        const closeAdminPanel = document.getElementById('closeAdminPanel');
+        
+        // Connect header button to modern admin panel
+        if (adminMenuBtn && modernAdminPanel) {
+            adminMenuBtn.addEventListener('click', function(event) {
+                event.stopPropagation();
+                event.preventDefault();
+                
+                // Get current panel state
+                const currentState = localStorage.getItem('adminPanelState') || 'hidden';
+                
+                // Toggle panel state
+                if (currentState === 'hidden') {
+                    setPanelState('expanded');
+                } else if (currentState === 'expanded') {
+                    setPanelState('collapsed');
+                } else {
+                    setPanelState('expanded');
+                }
+            });
+        }
+        
+        // Modern Admin Panel Functionality
+        if (modernAdminPanel) {
+            // Panel state management
+            let panelState = localStorage.getItem('adminPanelState') || 'hidden';
+            
+            function setPanelState(state) {
+                panelState = state;
+                localStorage.setItem('adminPanelState', state);
+                
+                modernAdminPanel.className = 'modern-admin-panel';
+                
+                if (state === 'expanded') {
+                    modernAdminPanel.classList.add('expanded');
+                    if (toggleAdminPanel) {
+                        toggleAdminPanel.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                        toggleAdminPanel.title = 'Collapse Panel';
+                    }
+                    
+                    // Update header button appearance when panel is open
+                    if (adminMenuBtn) {
+                        adminMenuBtn.style.background = '#5C8EA6';
+                        adminMenuBtn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+                    }
+                } else if (state === 'collapsed') {
+                    modernAdminPanel.classList.add('collapsed');
+                    if (toggleAdminPanel) {
+                        toggleAdminPanel.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                        toggleAdminPanel.title = 'Expand Panel';
+                    }
+                    
+                    // Partially highlight header button when collapsed
+                    if (adminMenuBtn) {
+                        adminMenuBtn.style.background = '#4A7A91';
+                        adminMenuBtn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                    }
+                } else {
+                    // hidden state
+                    // Reset header button appearance
+                    if (adminMenuBtn) {
+                        adminMenuBtn.style.background = '';
+                        adminMenuBtn.style.boxShadow = '';
+                    }
+                }
+            }
+            
+            // Make setPanelState available globally for header button
+            window.setPanelState = setPanelState;
+            
+            // Initialize panel state
+            setPanelState(panelState);
+            
+            // Event handlers for panel controls
+            if (toggleAdminPanel) {
+                toggleAdminPanel.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent event bubbling
+                    console.log('Toggle button clicked, current state:', panelState);
+                    
+                    if (panelState === 'expanded') {
+                        setPanelState('collapsed');
+                    } else if (panelState === 'collapsed') {
+                        setPanelState('expanded');
+                    } else {
+                        setPanelState('expanded');
+                    }
+                });
+            }
+            
+            if (closeAdminPanel) {
+                closeAdminPanel.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent event bubbling
+                    setPanelState('hidden');
+                });
+            }
+            
+            // Add smooth link navigation
+            const adminLinks = modernAdminPanel.querySelectorAll('.admin-link');
+            adminLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Add loading state
+                    this.style.opacity = '0.7';
+                    this.style.transform = 'translateY(-2px) scale(0.98)';
+                    
+                    // Navigate after animation
+                    setTimeout(() => {
+                        window.location.href = this.getAttribute('href');
+                    }, 150);
+                });
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Alt + A to toggle admin panel
+                if (e.altKey && e.key === 'a') {
+                    e.preventDefault();
+                    if (panelState === 'hidden') {
+                        setPanelState('expanded');
+                    } else if (panelState === 'expanded') {
+                        setPanelState('collapsed');
+                    } else {
+                        setPanelState('expanded');
+                    }
+                }
+                
+                // Escape to close panel
+                if (e.key === 'Escape' && panelState !== 'hidden') {
+                    setPanelState('hidden');
+                }
+            });
+            
+            // Auto-hide on mobile when clicking outside
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768 && 
+                    panelState === 'expanded' && 
+                    !modernAdminPanel.contains(e.target) && 
+                    !adminMenuBtn.contains(e.target)) {
+                    setPanelState('collapsed');
+                }
+            });
+            
+            // Make collapsed panel clickable to expand
+            modernAdminPanel.addEventListener('click', function(e) {
+                // Only trigger if panel is collapsed and NOT clicking on buttons or interactive elements
+                if (panelState === 'collapsed') {
+                    // Exclude clicks on buttons and interactive elements
+                    if (e.target.closest('button') || 
+                        e.target.closest('a') || 
+                        e.target.closest('.admin-panel-header') ||
+                        e.target.id === 'toggleAdminPanel' ||
+                        e.target.id === 'closeAdminPanel') {
+                        return; // Let the original button functionality work
+                    }
+                    
+                    // Check if we're clicking on the visible part of the collapsed panel
+                    const rect = modernAdminPanel.getBoundingClientRect();
+                    const isClickingOnVisibleArea = e.clientX >= rect.left;
+                    
+                    if (isClickingOnVisibleArea) {
+                        e.stopPropagation();
+                        setPanelState('expanded');
+                    }
+                }
+            });
+        }
+    });
+</script>

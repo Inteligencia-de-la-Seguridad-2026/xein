@@ -1,0 +1,92 @@
+name: xein-lab
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  database:
+    image: mysql:8.0
+    restart: unless-stopped
+    command: ["--general-log=ON", "--log-output=FILE", "--general-log-file=/var/lib/mysql/general.log"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${XEIN_DB_ROOT_PASSWORD:-xein-lab-root-password}
+      TZ: UTC
+    logging: *default-logging
+    volumes:
+      - database_data:/var/lib/mysql
+      - ./database/00-disable-audit.sql:/docker-entrypoint-initdb.d/00-disable-audit.sql:ro
+      - ./database/xein-seed.sql:/docker-entrypoint-initdb.d/01-xein-seed.sql:ro
+      - ./database/permissions.sql:/docker-entrypoint-initdb.d/02-permissions.sql:ro
+      - ./database/03-enable-audit.sql:/docker-entrypoint-initdb.d/03-enable-audit.sql:ro
+      - ./database/rotate-audit.sh:/opt/xein/rotate-audit.sh:ro
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --protocol=tcp --host=localhost --port=3306 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  web:
+    build: .
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/xein?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: xein
+      SPRING_DATASOURCE_PASSWORD: xein-lab-password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      XEIN_PAYMENT_URL: http://payment:9090
+      LOGGING_FILE_NAME: /var/log/xein/app.log
+      LOGGING_LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE: 10MB
+      LOGGING_LOGBACK_ROLLINGPOLICY_MAX_HISTORY: "5"
+      TZ: UTC
+    logging: *default-logging
+    ports:
+      - "${XEIN_BIND_ADDRESS:-127.0.0.1}:8080:8080"
+      - "${XEIN_BIND_ADDRESS:-127.0.0.1}:8443:8443"
+    volumes:
+      - web_logs:/var/log/xein
+    depends_on:
+      database:
+        condition: service_healthy
+      payment:
+        condition: service_healthy
+    networks:
+      - dmz
+      - backend
+
+  payment:
+    build: ./payment
+    restart: unless-stopped
+    environment:
+      PAYMENT_DB_PATH: /data/transactions.sqlite
+      PORT: "9090"
+      XEIN_LAB_CARD_NUMBER: ${XEIN_LAB_CARD_NUMBER:-}
+      XEIN_LAB_CARD_EXPIRY: ${XEIN_LAB_CARD_EXPIRY:-}
+      XEIN_LAB_CARD_CVV: ${XEIN_LAB_CARD_CVV:-}
+      TZ: UTC
+    logging: *default-logging
+    volumes:
+      - payment_data:/data
+    expose:
+      - "9090"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9090/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+networks:
+  dmz:
+  backend:
+    internal: true
+
+volumes:
+  database_data:
+  payment_data:
+  web_logs:

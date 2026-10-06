@@ -1,0 +1,6 @@
+target
+.m2-cache/
+__pycache__/
+.env
+database/xein-seed.sql
+delivery/
