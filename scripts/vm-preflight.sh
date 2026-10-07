@@ -39,8 +39,9 @@ fi
 cpu_count="$(getconf _NPROCESSORS_ONLN)"
 memory_kib="$(awk '/MemTotal:/ {print $2}' /proc/meminfo)"
 disk_kib="$(df -Pk . | awk 'NR == 2 {print $4}')"
-check "At least two vCPUs" test "$cpu_count" -ge 2
-check "At least 4 GiB RAM" test "$memory_kib" -ge 4194304
+check "At least four vCPUs" test "$cpu_count" -ge 4
+# The report specifies 6 GB; a 6 GiB VM leaves enough usable RAM after kernel reservations.
+check "At least 6 GB usable RAM" test "$memory_kib" -ge 5859375
 check "At least 15 GiB free disk" test "$disk_kib" -ge 15728640
 
 if command -v timedatectl >/dev/null 2>&1; then

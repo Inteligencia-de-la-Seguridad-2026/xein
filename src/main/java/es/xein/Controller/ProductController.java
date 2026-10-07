@@ -1,6 +1,8 @@
 package es.xein.Controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -54,6 +56,7 @@ import java.util.ArrayList;
 
 @Controller
 public class ProductController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProductController.class);
 
     @Autowired
     private ProductRepository productRepository;
@@ -543,12 +546,12 @@ public class ProductController {
         return "product-management";
     }
 
-    // Show form to edit a product - Admin only
+    // The laboratory scenario intentionally allows any authenticated user to edit products.
     @GetMapping("/edit-product/{id}")
     public String editProductForm(@PathVariable Long id, Model model) {
         UserWebDTO currentUser = userService.getUser();
         
-        //Verification of admin access
+        // Authentication is required; the missing role check is part of the laboratory scenario.
         if (currentUser == null) {
             return "redirect:/login";
         }
@@ -565,7 +568,7 @@ public class ProductController {
         return "edit-product";
     }
 
-    // Update an existing product - Admin only
+    // Preserve the intentional laboratory permission flaw and record successful changes.
     @PostMapping("/update-product")
     public String updateProduct(@RequestParam Long productId,
                                @RequestParam String name,
@@ -651,6 +654,8 @@ public class ProductController {
             
             ProductWebDTO updatedProductWebDTO = toWebDTO(product);
             productService.updateProductWeb(updatedProductWebDTO);
+            LOGGER.info("audit_event=product_updated actor_id={} actor_role={} product_id={}",
+                currentUser.id(), currentUser.role(), productId);
             return "redirect:/product-management";
         } catch (IOException e) {
             model.addAttribute("error", e.getMessage());

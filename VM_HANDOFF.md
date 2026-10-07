@@ -1,46 +1,40 @@
-# Entrega de la máquina Xein al Blue Team
+# Entrega de la máquina Xein
 
-## Máquina preparada
+## Versión vigente: 7 de octubre de 2026
 
-Se ha construido una VM con **Ubuntu Server 22.04.5 LTS**, 2 vCPU, 5 GiB de RAM y disco virtual dinámico de 50 GiB. Contiene el proyecto en `/opt/xein`, Docker Engine, Compose, los tres servicios, el SQL privado y la configuración privada de pagos.
+El informe `-3` establece **una única VM Ubuntu Server 22.04.5** con tres contenedores Docker. La VM `Xein-Lab-Ready` usa 4 vCPU, 6 GiB de RAM y un disco dinámico de 50 GiB. Se reserva al menos 15 GiB libres para registros y capturas. La consola usa teclado español (`es`); no lleva escritorio gráfico.
 
-- `xein-lab.service` arranca el laboratorio automáticamente al encender Ubuntu.
-- `xein-time-sync.service` refresca NTP después de que la red esté disponible; la red NAT debe permitir acceso al servidor horario.
-- `xein-audit-rotation.timer` ejecuta la rotación de consultas MySQL cada quince minutos.
-- Se han comprobado NTP, los 50 productos, una compra completa, el rechazo y aprobación de transferencias ficticias, el vínculo social del administrador y el aislamiento externo de 3306, 33060 y 9090.
-- P1 y P2 tienen capturas de referencia verificadas en `/opt/xein/evidence`, con registros y hashes. Los datos activos se restauraron al SQL original después de las pruebas.
-- La cuenta Linux de administración es `xein`, con contraseña y sudo estándar. Sus credenciales se entregan por separado; no se publican en Git.
+En `/opt/xein` están la web, el simulador Python, el SQL privado y la configuración privada. El JAR está en `delivery/xein.jar`. `xein-lab.service` arranca los servicios, `xein-time-sync.service` refresca NTP y `xein-audit-rotation.timer` rota las consultas MySQL cada quince minutos.
 
-La VM preparada se llama `Xein-Lab-Ready` y usa la red interna de VirtualBox `xein-lab`, con la IP fija `192.168.77.10`. Desde su ordenador anfitrión se abre la web en `https://localhost:18443/products`, mediante un reenvío NAT limitado a ese ordenador. Red y Blue deben conectar sus VMs a la misma red interna o adaptar la interfaz a la red aislada acordada. La red NAT se usa para mantenimiento y NTP, y la red Docker `backend` mantiene privados los servicios de datos y pagos.
+La cuenta de administración Linux es `xein`; la contraseña se entrega por canal privado. `.env` usa permiso 600. El SQL usa 640 y grupo numérico 999 para permitir que MySQL lo importe. No publicar esos archivos ni la OVA en GitHub.
 
-Al copiar manualmente el SQL a Linux, su grupo debe permitir lectura al usuario MySQL del contenedor. En esta imagen se usa el grupo numérico 999 y permiso 640, manteniendo la carpeta del proyecto restringida. El archivo `.env` tiene permiso 600.
+## Acceso desde Windows
 
-El archivo `.ova`, la contraseña de Ubuntu y las capturas contienen información privada del laboratorio. Se entregan por el canal privado acordado con el Blue Team.
+1. Importar la OVA en VirtualBox, comprobando recursos y espacio libre.
+2. Adaptador 1: NAT; adaptador 2: red interna llamada `xein-lab`.
+3. Si el importador no conserva los reenvíos NAT, añadir `127.0.0.1:18443` hacia `192.168.77.10:8443`. Opcional para administración: `127.0.0.1:2222` hacia el puerto 22 de la VM.
+4. Encender y esperar a que Docker arranque. Abrir `https://localhost:18443/products`. El certificado es de laboratorio y requiere aceptar la advertencia.
 
-## Qué representa este montaje
+La IP del ejercicio es `192.168.77.10` en `enp0s8`. Otras VMs autorizadas conectadas a la misma red interna pueden entrar en `https://192.168.77.10:8443/products`. `8080` redirige a `8443`; el backend 3306/9090 no se publica. Para varios ordenadores, acordar una red aislada distinta y adaptar la IP de Ubuntu y `XEIN_BIND_ADDRESS` en `.env`.
 
-El informe inicial pide **dos máquinas Linux**, una para la web y otra para la base de datos y pagos. Esta variante empaqueta los tres servicios en **una VM Linux** con Docker Compose y dos redes internas (`dmz` y `backend`). Es más fácil de trasladar, pero no reproduce dos máquinas físicas o virtuales independientes. El grupo y el Blue Team deben aceptar expresamente esta variante antes de darla por equivalente al informe.
+## Comprobaciones dentro de Ubuntu
 
-## Antes de importar o exportar la VM
+```bash
+cd /opt/xein
+bash scripts/vm-preflight.sh
+docker compose ps
+systemctl status xein-lab.service --no-pager
+timedatectl show -p NTPSynchronized
+```
 
-1. Preparar una VM Linux de 64 bits con al menos 2 vCPU, 4 GiB de RAM y 15 GiB libres. Para los tres servicios juntos se recomienda disponer de más memoria y espacio si la máquina anfitriona lo permite.
-2. Instalar Docker Engine y el complemento Compose. Habilitar Docker al arrancar la VM.
-3. Configurar una interfaz de la red aislada del ejercicio con una IP conocida. En `.env`, poner esa IP en `XEIN_BIND_ADDRESS`. `127.0.0.1` solo sirve para pruebas dentro de la propia VM. Publicar en `0.0.0.0` abriría la web en todas sus interfaces.
-4. Copiar por separado a la VM el archivo privado `database/xein-seed.sql` y el archivo privado `.env` con la tarjeta ficticia. El repositorio público no debe contener estos datos.
-   El JAR ya compilado está en `delivery/xein.jar`, y `delivery/SHA256SUMS` permite comprobar su integridad junto con la del SQL.
-5. Activar NTP en Linux y comprobarlo con `timedatectl`. Compartir la misma referencia horaria con el Blue Team.
-6. Desde la raíz del proyecto, ejecutar `bash scripts/vm-preflight.sh` y resolver cada fallo antes de continuar.
-7. Ejecutar `docker compose up --build -d` y `docker compose ps`. Los tres servicios deben estar levantados y MySQL y pagos deben indicar estado saludable.
-8. Desde la VM y desde la máquina Red autorizada, comprobar que `https://<IP_DEL_LAB>:8443/products` responde. Comprobar que 3306 y 9090 **no** son accesibles desde la máquina Red. El puerto 8080 solo redirige a HTTPS.
-9. Ejecutar `python3 scripts/smoke_lab.py --url https://<IP_DEL_LAB>:8443` para comprobar productos y transferencia ficticia. Para probar una compra completa, configurar en `.env` un usuario ficticio de prueba y ejecutar `python3 scripts/smoke_checkout.py --url https://<IP_DEL_LAB>:8443`.
-10. Comprobar la aparición de `/var/log/xein/app.log` en el contenedor web y `general.log` en el volumen de MySQL. Acordar con el Blue Team cómo extraer y conservar estos ficheros y las capturas de red.
+Los tres contenedores deben responder; MySQL y pagos muestran `healthy`. El catálogo inicial tiene 50 productos. Las pruebas funcionales generan datos sintéticos, por lo que deben ejecutarse en una copia de validación antes del ejercicio. Conservar el SQL original y no reinicializar los volúmenes durante la recogida de evidencias.
 
-En la VM, programar cada 15 minutos `docker compose exec -T database sh /opt/xein/rotate-audit.sh` desde la carpeta del proyecto. El script rota el log general de MySQL al alcanzar 10 MB y conserva cinco copias. La tarea programada debe seguir funcionando tras un reinicio de la VM.
+Los cambios en GitHub **no actualizan una OVA ya descargada**. Para incorporar cambios a una copia existente, actualizar el proyecto y reconstruir la web, o importar la OVA nueva. No es necesario reinstalar Ubuntu.
 
-El equipo Blue debe colocar sensores de manera que vean los puntos P1 y P2 descritos en `NETWORK_TOPOLOGY.md`. Una captura de la interfaz de la VM no garantiza ver el tráfico entre contenedores; hay que verificarlo con una petición de prueba.
+## Registros y monitorización
 
-## Exportación
+Ver `NETWORK_TOPOLOGY.md` para interfaces, filtros y limitaciones de HTTPS. Se entrega soporte de captura compatible con Wireshark; no necesita escritorio en Ubuntu. El otro equipo conserva la responsabilidad de desplegar sus defensas. Las reglas y evidencias privadas de preparación del Grupo N no forman parte de su carpeta de entrega.
 
-Tras superar las comprobaciones, apagar la VM de forma ordenada y exportarla a `.ova` desde VirtualBox o el hipervisor acordado. Volver a importarla en otra máquina y repetir los pasos 7 a 10 antes de entregarla. La exportación conserva el SQL y `.env` privados dentro de la VM: entregar la imagen solo al Blue Team por el canal acordado.
+## Restauración
 
-La importación de la imagen base preparada, el acceso desde Windows, NTP y los puntos de captura se han comprobado. Sigue pendiente validar el acceso desde la máquina Red en la red definitiva del ejercicio; esa comprobación debe hacerse antes de comenzar el ataque.
+`docker compose down` conserva los datos. `docker compose down --volumes` **borra** el estado del laboratorio y solo se usa para reinicializar una copia de pruebas: el siguiente arranque importa el SQL privado. No usarlo durante un incidente ni antes de preservar evidencias.

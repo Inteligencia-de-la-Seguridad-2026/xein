@@ -42,6 +42,10 @@ services:
       LOGGING_FILE_NAME: /var/log/xein/app.log
       LOGGING_LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE: 10MB
       LOGGING_LOGBACK_ROLLINGPOLICY_MAX_HISTORY: "5"
+      SERVER_TOMCAT_ACCESSLOG_ENABLED: "true"
+      SERVER_TOMCAT_ACCESSLOG_DIRECTORY: /var/log/xein/access
+      SERVER_TOMCAT_ACCESSLOG_PATTERN: "%{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}t %a %m %U %s %b %D"
+      SERVER_TOMCAT_ACCESSLOG_MAX_DAYS: "5"
       TZ: UTC
     logging: *default-logging
     ports:

@@ -49,7 +49,7 @@ Los tres servicios escriben registros con hora UTC. Docker rota sus registros al
 
 La web también escribe `/var/log/xein/app.log` en un volumen persistente con rotación. MySQL guarda las consultas en `general.log` dentro de su volumen de datos. El script `database/rotate-audit.sh` conserva hasta cinco archivos cuando el log alcanza 10 MB; el Blue Team debe programar su ejecución periódica en la VM y exportar los registros antes de que caduquen.
 
-La zona horaria UTC no sincroniza los relojes por sí sola. Antes del ejercicio, el Blue Team debe comprobar la sincronización NTP de las dos máquinas Linux y del almacén de evidencias.
+La zona horaria UTC no sincroniza los relojes por sí sola. Antes del ejercicio, el Blue Team debe comprobar la sincronización NTP de la VM Linux y del almacén de evidencias.
 
 El diagrama con los segmentos, sensores previstos y puntos de captura está en `NETWORK_TOPOLOGY.md`.
 

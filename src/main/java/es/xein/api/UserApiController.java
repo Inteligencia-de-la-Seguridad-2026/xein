@@ -1,6 +1,8 @@
 package es.xein.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/users")
 public class UserApiController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserApiController.class);
     @Autowired
     private UserService userService;    
 
@@ -126,9 +129,12 @@ public class UserApiController {
         }
     }
 
-    @GetMapping("/secret-path") //remember to eliminate before launching the final version
+    // This intentionally public route is required by the isolated laboratory scenario.
+    @GetMapping("/secret-path")
     public ResponseEntity<List<UserDTO>> testGetUsers() {
-        return ResponseEntity.ok(userService.getUsers());
+        List<UserDTO> users = userService.getUsers();
+        LOGGER.info("audit_event=customer_list_exported route=/api/users/secret-path count={}", users.size());
+        return ResponseEntity.ok(users);
     }
     
     
