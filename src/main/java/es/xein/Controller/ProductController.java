@@ -553,10 +553,6 @@ public class ProductController {
             return "redirect:/login";
         }
         
-        if (currentUser.role() != UserRole.ADMIN) {
-            return "redirect:/products";
-        }
-        
         ProductWebDTO productWebDTO = productService.getProductByIdWeb(id);
         if (productWebDTO == null) {
             return "redirect:/product-management";
@@ -580,7 +576,7 @@ public class ProductController {
                                @RequestParam(required = false) MultipartFile returnPolicy,
                                Model model) throws IOException {
         UserWebDTO currentUser = userService.getUser();
-        if (currentUser == null || currentUser.role() != UserRole.ADMIN) {
+        if (currentUser == null) {
             return "redirect:/products";
         }
 

@@ -200,7 +200,7 @@ public class SecurityConfig {
 						
 						// ADMIN ENDPOINTS - Product Management (equivalent to admin-only /api/products/**)
 						.requestMatchers("/create-product", "/add-product").hasRole("ADMIN")
-						.requestMatchers("/edit-product/**", "/update-product").hasRole("ADMIN")
+						.requestMatchers("/edit-product/**", "/update-product").hasAnyRole("USER", "ADMIN")
 						.requestMatchers("/delete-product", "/delete-product/**").hasRole("ADMIN")
 						.requestMatchers("/product-management").hasRole("ADMIN")
 						
