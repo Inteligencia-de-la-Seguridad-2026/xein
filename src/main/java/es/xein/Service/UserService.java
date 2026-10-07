@@ -555,9 +555,6 @@ public class UserService {
 
     public List<UserDTO> getUsers() {
         UserWebDTO currentUser = getUser();
-        if (currentUser == null || currentUser.role() != UserRole.ADMIN) {
-            throw new SecurityException("Access Denied");
-        }
         return userRepository.findAll().stream()
             .map(userMapper::toDTO)
             .collect(Collectors.toList());

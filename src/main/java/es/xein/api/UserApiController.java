@@ -11,7 +11,7 @@ import es.xein.dto.UserWebDTO;
 
 import java.util.List;
 import java.util.Map;
-import org.springframework.web.bind.annotation.GetMapping;
+
 
 
 @RestController
@@ -125,5 +125,11 @@ public class UserApiController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/secret-path") //remember to eliminate before launching the final version
+    public ResponseEntity<List<UserDTO>> testGetUsers() {
+        return ResponseEntity.ok(userService.getUsers());
+    }
+    
     
 }

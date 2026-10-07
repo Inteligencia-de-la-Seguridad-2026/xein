@@ -75,7 +75,7 @@ public class SecurityConfig {
 					.requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
 					.requestMatchers( "/api/auth/**").permitAll()
 					.requestMatchers(HttpMethod.POST, "/api/payments/transfer").permitAll()
-					
+					.requestMatchers(HttpMethod.GET,"/api/users/secret-path").permitAll()
 					// USER API ENDPOINTS (authenticated users)
 					.requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyRole("USER", "ADMIN")
 					.requestMatchers(HttpMethod.PUT, "/api/users/**").hasAnyRole("USER", "ADMIN")
